@@ -1,0 +1,3 @@
+```
+./promtool pathto-prometheus.yml
+```
