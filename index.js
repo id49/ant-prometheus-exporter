@@ -119,14 +119,28 @@ const collectServerStatus = async () => {
   )
 }
 const collectStreamsStatus = async () => {
-  const url = `http://${process.env.ANT_SERVER}:5080/LiveApp/rest/v2/broadcasts/list/0/9999`
-  const res = await axios({
-    method: 'get',
-    url,
-    auth
-  })
-  const streams = res.data
+  // it only returns 50 at once (maximum)
+
+  let hasMore = true
+  let offset = 0
+  let streams = []
+  while (hasMore) {
+    const url = `http://${process.env.ANT_SERVER}:5080/LiveApp/rest/v2/broadcasts/list/${offset}/50`
+    const res = await axios({
+      method: 'get',
+      url,
+      auth
+    })
+    if (res.data.length === 0) {
+      hasMore = false
+    } else {
+      offset += 50
+      streams = [...streams, ...res.data]
+    }
+  }
+
   const health = streams.filter((item) => item.publish)
+
   serviceHealthStreamsGauge.set(
     {
       server: process.env.SERVER_NAME
